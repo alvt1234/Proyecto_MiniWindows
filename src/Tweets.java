@@ -14,11 +14,11 @@ public class Tweets extends javax.swing.JPanel {
     UsersTwit users=new UsersTwit();
     LoginTwitter login=new LoginTwitter();
     Foto foto=new Foto(login);
-    private String text;
+    private String text,fecha;
     public Tweets(String user,String texto,String fecha) {
         initComponents();
         this.text=texto;
-        
+        this.fecha=fecha;
         
        // ImageIcon fotoIcon = users.obtenerFotoPerfil(user);
       //  perfil.setIcon(fotoIcon);
@@ -39,6 +39,10 @@ public class Tweets extends javax.swing.JPanel {
             System.out.println("No se pudo cargar la fot");
         }
         
+    }
+
+    public String getFecha() {
+        return fecha;
     }
 
     @SuppressWarnings("unchecked")

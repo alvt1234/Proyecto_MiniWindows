@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +45,6 @@ public class Timeline extends javax.swing.JPanel {
        try{
        this.logica=logica;
        this.twits=logica.cargarTwits();
-       cargartwitssiguiendo();
        subirtweets();
        ImageIcon icono = foto.seticon(user.getUserlog(), foto.getRutaImagen(), null,50,50);
         if(icono==null){
@@ -311,45 +311,27 @@ private void subirtweets() throws IOException {
     paneltweets.removeAll();
     paneltweets.setLayout(new BoxLayout(paneltweets, BoxLayout.Y_AXIS));
 
-    // Panel para los tweets del usuario logueado
-    JPanel panelTweetsUsuario = new JPanel();
-    panelTweetsUsuario.setLayout(new BoxLayout(panelTweetsUsuario, BoxLayout.Y_AXIS));
+    // Lista para almacenar todos los tweets
+    ArrayList<Tweets> todosLosTweets = new ArrayList<>();
 
+    // Agregar los tweets del usuario logueado
     twits = logica.cargarTwits();
+    agregarTweetsAlaLista(todosLosTweets, twits);
 
-    if (!twits.isEmpty()) {
-        // Limpiar el conjunto de tweets antes de agregar nuevos
-        tweetsSet.clear();
-
-        // Iterar en orden inverso para agregar los nuevos tweets al principio
-        for (int i = twits.size() - 1; i >= 0; i--) {
-            String[] tweet = twits.get(i);
-            String identificador = tweet[1] + tweet[2]; // Identificador único
-
-            // Agregar tweet solo si no existe en el conjunto
-            if (!tweetsSet.contains(identificador)) {
-                tweetsSet.add(identificador);
-
-                String usuario = tweet[0];
-                String texto = tweet[1];
-                String fecha = tweet[2];
-
-                long tiempoEnMilisegundos = Long.parseLong(fecha);
-                Date fechadate = new Date(tiempoEnMilisegundos);
-                SimpleDateFormat formatoFecha = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-                String fechaFormateada = formatoFecha.format(fechadate);
-
-                Tweets twee = new Tweets(usuario, texto, fechaFormateada);
-                panelTweetsUsuario.add(twee);
-            }
-        }
+    // Agregar los tweets de los seguidores
+    ArrayList<String> twitssiguiendo = buscar.cargartwitseg();
+    for (String usuario : twitssiguiendo) {
+        ArrayList<String[]> twitsUsuario = buscar.cargarTwits(usuario);
+        agregarTweetsAlaLista(todosLosTweets, twitsUsuario);
     }
 
-    // Agregar panel de tweets del usuario logueado al panel general
-    paneltweets.add(panelTweetsUsuario);
+    // Ordenar la lista de tweets por fecha de forma descendente
+    Collections.sort(todosLosTweets, (t1, t2) -> t2.getFecha().compareTo(t1.getFecha()));
 
-    // Cargar y agregar los tweets de los seguidores
-    cargartwitssiguiendo();
+    // Agregar los tweets ordenados al panel
+    for (Tweets tweet : todosLosTweets) {
+        paneltweets.add(tweet);
+    }
 
     // Revalidar y repintar el panel general
     paneltweets.revalidate();
@@ -362,33 +344,21 @@ private void subirtweets() throws IOException {
     barra.setValue(barra.getMaximum());
 }
 
-private void cargartwitssiguiendo() throws IOException {
-    ArrayList<String> twitssiguiendo = buscar.cargartwitseg();
+// Método para agregar tweets a la lista
+private void agregarTweetsAlaLista(ArrayList<Tweets> lista, ArrayList<String[]> tweets) {
+    if (tweets != null) {
+        for (String[] tweetData : tweets) {
+            String usuario = tweetData[0];
+            String texto = tweetData[1];
+            String fecha = tweetData[2];
 
-    for (String usuario : twitssiguiendo) {
-        ArrayList<String[]> twitsUsuario = buscar.cargarTwits(usuario);
+            long tiempoEnMilisegundos = Long.parseLong(fecha);
+            Date fechadate = new Date(tiempoEnMilisegundos);
+            SimpleDateFormat formatoFecha = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+            String fechaFormateada = formatoFecha.format(fechadate);
 
-        if (twitsUsuario != null) {
-            for (int i = twitsUsuario.size() - 1; i >= 0; i--) {
-                String[] tweet = twitsUsuario.get(i);
-                String identificador = tweet[1] + tweet[2]; // Identificador único
-
-                // Agregar tweet solo si no existe en el conjunto
-                if (!tweetsSet.contains(identificador)) {
-                    tweetsSet.add(identificador);
-
-                    String texto = tweet[1];
-                    String fecha = tweet[2];
-
-                    long tiempoEnMilisegundos = Long.parseLong(fecha);
-                    Date fechadate = new Date(tiempoEnMilisegundos);
-                    SimpleDateFormat formatoFecha = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-                    String fechaFormateada = formatoFecha.format(fechadate);
-
-                    Tweets twee = new Tweets(usuario, texto, fechaFormateada);
-                    paneltweets.add(twee);
-                }
-            }
+            Tweets twee = new Tweets(usuario, texto, fechaFormateada);
+            lista.add(twee);
         }
     }
 }
